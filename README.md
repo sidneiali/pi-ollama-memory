@@ -31,7 +31,7 @@ Crie `.pi/ollama-memory.json` no projeto:
   "maxRetrievedChars": 12000,
   "minScore": 0.25,
   "indexToolResults": true,
-  "pruneHistory": true,
+  "pruneHistory": false,
   "keepRecentMessages": 8
 }
 ```
