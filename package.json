@@ -1,0 +1,11 @@
+{
+  "name": "pi-ollama-memory",
+  "version": "0.1.0",
+  "description": "Project-scoped semantic memory for Pi using Ollama embeddings",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=22" },
+  "peerDependencies": { "@earendil-works/pi-coding-agent": "*" },
+  "pi": { "extensions": ["./src/index.ts"] },
+  "files": ["src", "README.md", "LICENSE"]
+}
