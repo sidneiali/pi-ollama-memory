@@ -45,6 +45,7 @@ nuvem. Adicione esse diretório ao `.gitignore` se o projeto for versionado.
 - `/memory search <texto>`
 - `/memory on` e `/memory off`
 - `/memory clear`
+- `/memory update` — reprocessa as embeddings com o modelo configurado
 
 A memória é uma camada de recuperação: o envelope da API continua sendo JSON.
 Por padrão, mensagens antigas são removidas do contexto temporário e substituídas

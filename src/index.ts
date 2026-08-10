@@ -166,6 +166,34 @@ export default function (pi: ExtensionAPI) {
     });
   }
 
+  async function updateIndex(ctx: ExtensionContext): Promise<{ updated: number; failed: number }> {
+    // Aguarda gravações pendentes para não perder novas memórias durante a atualização.
+    await writeQueue;
+    const snapshot = [...records];
+    let updated = 0;
+    let failed = 0;
+
+    for (let index = 0; index < snapshot.length; index += 1) {
+      const record = snapshot[index];
+      try {
+        const embedding = await embed(record.text);
+        if (!embedding) {
+          failed += 1;
+          continue;
+        }
+        const current = records.find((item) => item.id === record.id);
+        if (current) current.embedding = embedding;
+        updated += 1;
+        ctx.ui.setStatus("ollama-memory", `MEM: atualizando ${index + 1}/${snapshot.length}`);
+      } catch {
+        failed += 1;
+      }
+    }
+
+    if (updated > 0) await save();
+    return { updated, failed };
+  }
+
   async function retrieve(query: string): Promise<MemoryRecord[]> {
     if (!config.enabled || !query.trim() || records.length === 0) return [];
     try {
@@ -349,6 +377,7 @@ ${memory}`,
         { value: "clear", label: "clear", description: "Clear project memory" },
         { value: "search", label: "search", description: "Search project memory" },
         { value: "stats", label: "stats", description: "Show context optimization statistics" },
+        { value: "update", label: "update", description: "Rebuild memory embeddings with the current model" },
       ];
       const filtered = commands.filter((command) => command.value.startsWith(prefix));
       return filtered.length > 0 ? filtered : null;
@@ -368,6 +397,15 @@ ${memory}`,
       } else if (command === "stats") {
         const stats = await readOptimizationStats(cwd);
         ctx.ui.notify(`EstatÃ­sticas de contexto: ${formatOptimizationStats(stats)}.`, "info");
+      } else if (command === "update") {
+        await load(ctx);
+        if (records.length === 0) {
+          ctx.ui.notify("Nenhuma memoria para atualizar.", "info");
+        } else {
+          ctx.ui.notify(`Atualizando ${records.length} memorias com ${config.embeddingModel}...`, "info");
+          const result = await updateIndex(ctx);
+          ctx.ui.notify(`Indice atualizado: ${result.updated} reprocessadas${result.failed ? `, ${result.failed} falharam` : ""}.`, result.failed ? "warning" : "info");
+        }
       } else if (command === "search") {
         const query = args.replace(/^search\s*/i, "");
         const found = await retrieve(query);
