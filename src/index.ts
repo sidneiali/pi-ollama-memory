@@ -15,16 +15,6 @@ interface Config {
   keepRecentMessages: number;
 }
 
-interface OptimizationStats {
-  requests: number;
-  originalChars: number;
-  optimizedChars: number;
-  savedChars: number;
-  originalTokens: number;
-  optimizedTokens: number;
-  savedTokens: number;
-}
-
 interface MemoryRecord {
   id: string;
   project: string;
@@ -69,30 +59,6 @@ function cosine(a: number[], b: number[]): number {
     bb += b[i] * b[i];
   }
   return aa && bb ? dot / (Math.sqrt(aa) * Math.sqrt(bb)) : 0;
-}
-
-async function readOptimizationStats(cwd: string): Promise<OptimizationStats> {
-  try {
-    const raw = await fs.readFile(path.join(cwd, ".pi", "ollama-memory", "stats.json"), "utf8");
-    const parsed = JSON.parse(raw) as Partial<OptimizationStats>;
-    return {
-      requests: Number(parsed.requests) || 0,
-      originalChars: Number(parsed.originalChars) || 0,
-      optimizedChars: Number(parsed.optimizedChars) || 0,
-      savedChars: Number(parsed.savedChars) || 0,
-      originalTokens: Number(parsed.originalTokens) || Math.round((Number(parsed.originalChars) || 0) / 4),
-      optimizedTokens: Number(parsed.optimizedTokens) || Math.round((Number(parsed.optimizedChars) || 0) / 4),
-      savedTokens: Number(parsed.savedTokens) || Math.round((Number(parsed.savedChars) || 0) / 4),
-    };
-  } catch {
-    return { requests: 0, originalChars: 0, optimizedChars: 0, savedChars: 0, originalTokens: 0, optimizedTokens: 0, savedTokens: 0 };
-  }
-}
-
-function formatOptimizationStats(stats: OptimizationStats): string {
-  const tokens = stats.savedTokens;
-  const ratio = stats.originalChars ? (stats.savedChars / stats.originalChars * 100).toFixed(1) : "0.0";
-  return `${stats.requests} req. | ~${tokens} tokens economizados | ${ratio}%`;
 }
 
 export default function (pi: ExtensionAPI) {
@@ -163,7 +129,7 @@ export default function (pi: ExtensionAPI) {
   }
 
   async function updateIndex(ctx: ExtensionContext): Promise<{ updated: number; failed: number }> {
-    // Aguarda gravaÁıes pendentes para n„o perder novas memÛrias durante a atualizaÁ„o.
+    // Aguarda gravaÔøΩÔøΩes pendentes para nÔøΩo perder novas memÔøΩrias durante a atualizaÔøΩÔøΩo.
     await writeQueue;
     const snapshot = [...records];
     let updated = 0;
@@ -371,7 +337,6 @@ ${memory}`,
         { value: "off", label: "off", description: "Disable Ollama memory" },
         { value: "clear", label: "clear", description: "Clear project memory" },
         { value: "search", label: "search", description: "Search project memory" },
-        { value: "stats", label: "stats", description: "Show context optimization statistics" },
         { value: "update", label: "update", description: "Rebuild memory embeddings with the current model" },
       ];
       const filtered = commands.filter((command) => command.value.startsWith(prefix));
@@ -389,9 +354,6 @@ ${memory}`,
         records = [];
         await save();
         ctx.ui.notify("Mem√≥ria do projeto limpa.", "info");
-      } else if (command === "stats") {
-        const stats = await readOptimizationStats(cwd);
-        ctx.ui.notify(`Estat√≠sticas de contexto: ${formatOptimizationStats(stats)}.`, "info");
       } else if (command === "update") {
         await load(ctx);
         if (records.length === 0) {
