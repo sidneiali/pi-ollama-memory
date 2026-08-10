@@ -118,10 +118,6 @@ export default function (pi: ExtensionAPI) {
     } catch {
       records = [];
     }
-    if (ctx && config.enabled) {
-      const stats = await readOptimizationStats(cwd);
-      ctx.ui.setStatus("ollama-memory", `MEM: ${records.length}${stats.savedTokens ? ` | ~${stats.savedTokens} tok economizados` : ""}`);
-    }
   }
 
   async function save(): Promise<void> {
@@ -184,7 +180,6 @@ export default function (pi: ExtensionAPI) {
         const current = records.find((item) => item.id === record.id);
         if (current) current.embedding = embedding;
         updated += 1;
-        ctx.ui.setStatus("ollama-memory", `MEM: atualizando ${index + 1}/${snapshot.length}`);
       } catch {
         failed += 1;
       }
@@ -413,8 +408,6 @@ ${memory}`,
       } else {
         ctx.ui.notify(`Memória: ${config.enabled ? "on" : "off"} | registros: ${records.length} | modelo: ${config.embeddingModel}`, "info");
       }
-      const stats = await readOptimizationStats(cwd);
-      ctx.ui.setStatus("ollama-memory", `MEM: ${records.length}${stats.savedTokens ? ` | ~${stats.savedTokens} tok economizados` : ""}`);
     },
   });
 }
