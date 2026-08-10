@@ -4,6 +4,8 @@ Memória semântica por projeto para o Pi Coding Agent usando Ollama. O pacote
 indexa prompts, respostas e resultados de ferramentas localmente, recupera os
 trechos relevantes antes de cada chamada e evita reenviar histórico irrelevante.
 
+> **Primeira utilização:** execute `/memory init` dentro do projeto. O comando cria automaticamente `.pi/ollama-memory.json` e os diretórios necessários; não é necessário criar arquivos ou diretórios manualmente.
+
 ## Requisitos
 
 - Ollama em `http://localhost:11434`
@@ -20,7 +22,7 @@ pi install npm:pi-ollama-memory
 
 ## Configuração
 
-Crie `.pi/ollama-memory.json` no projeto:
+O comando `/memory init` cria `.pi/ollama-memory.json` com os valores padrão. Edite o arquivo somente se quiser personalizar a configuração:
 
 ```json
 {
@@ -41,6 +43,7 @@ nuvem. Adicione esse diretório ao `.gitignore` se o projeto for versionado.
 
 ## Comandos
 
+- `/memory init` — inicializa a configuração e os diretórios do projeto
 - `/memory status`
 - `/memory search <texto>`
 - `/memory on` e `/memory off`
