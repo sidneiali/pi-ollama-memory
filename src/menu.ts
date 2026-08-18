@@ -11,6 +11,10 @@ export function registerMemoryCommand(pi: ExtensionAPI, store: MemoryStore): voi
     },
     handler: async (args, ctx) => {
       const command = args.trim().toLowerCase();
+      if (command !== "init" && !store.isInitialized) {
+        ctx.ui.notify("Execute /memory init neste projeto antes de usar o pi-ollama-memory.", "warning");
+        return;
+      }
       if (command === "init") {
         await store.initialize(ctx.cwd);
         ctx.ui.notify("Configuração criada em .pi/ollama-memory.json.", "info");

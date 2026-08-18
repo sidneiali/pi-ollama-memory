@@ -23,6 +23,22 @@ export class MemoryStore {
   private get configPath(): string { return join(this.cwd, CONFIG_DIR_NAME, "ollama-memory.json"); }
   private get storePath(): string { return join(this.cwd, CONFIG_DIR_NAME, "memory", "index.jsonl"); }
 
+  get isInitialized(): boolean {
+    return Boolean(this.cwd) && existsSync(this.configPath);
+  }
+
+  async startExisting(cwd: string): Promise<void> {
+    this.cwd = cwd;
+    if (!this.isInitialized) {
+      this.config = { ...DEFAULT_CONFIG };
+      this.records = [];
+      return;
+    }
+
+    this.config = await this.loadConfig();
+    await this.loadRecords();
+  }
+
   async initialize(cwd: string): Promise<void> {
     this.cwd = cwd;
     const configDir = join(cwd, CONFIG_DIR_NAME);

@@ -24,7 +24,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("session_start", async (_event, ctx) => {
     try {
-      await store.initialize(ctx.cwd);
+      await store.startExisting(ctx.cwd);
     } catch (error) {
       ctx.ui.notify(`Falha ao inicializar memória Ollama: ${error instanceof Error ? error.message : String(error)}`, "warning");
     }
@@ -35,7 +35,7 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.on("before_agent_start", async (event, ctx) => {
-    if (!store.config.enabled) return;
+    if (!store.isInitialized || !store.config.enabled) return;
     try {
       const retrieved = await store.retrieve(event.prompt || currentUserPrompt);
       if (retrieved.length === 0) return;
@@ -48,12 +48,12 @@ ${formatRetrieved(retrieved, store.config.maxRetrievedChars)}`, display: false }
   });
 
   pi.on("context", async (event) => {
-    if (!store.config.enabled || !store.config.pruneHistory) return;
+    if (!store.isInitialized || !store.config.enabled || !store.config.pruneHistory) return;
     return { messages: pruneHistory(event.messages, store.config) };
   });
 
   pi.on("message_end", async (event, ctx) => {
-    if (!store.config.enabled || event.message.role !== "assistant") return;
+    if (!store.isInitialized || !store.config.enabled || event.message.role !== "assistant") return;
     const assistantText = textFromContent(event.message.content);
     const combined = `Usuário:
 ${currentUserPrompt}
@@ -68,7 +68,7 @@ ${assistantText}`.trim();
   });
 
   pi.on("tool_result", async (event) => {
-    if (!store.config.enabled || !store.config.indexToolResults || event.isError) return;
+    if (!store.isInitialized || !store.config.enabled || !store.config.indexToolResults || event.isError) return;
     const text = textFromContent(event.content);
     if (!text.trim()) return;
     try {
